@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI vs Real - Swipe Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Avenir Next", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #e7f5dc 0%, #cfe1b9 45%, #b6c99b 70%, #98a77c 100%);
+            font-size: 18px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 28px 16px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+            background: #e7f5dc;
+            border-radius: 36px;
+            padding: 26px 26px 32px;
+            box-shadow: 0 30px 70px rgba(41, 52, 36, 0.25);
+        }
+
+        .home-layer {
+            width: fit-content;
+            max-width: 1200px;
+            min-height: 0;
+            background: #e7f5dc;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 30px 70px rgba(41, 52, 36, 0.25);
+            display: grid;
+            grid-template-rows: 1fr auto;
+            align-items: stretch;
+        }
+
+        .poster-image {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 92vh;
+            object-fit: contain;
+            border-radius: 28px;
+            background: #000000;
+        }
+
+        .home-actions {
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+        }
+
+        .start-btn {
+            background: #728156;
+            color: #f6fbe9;
+            border: none;
+            padding: 16px 44px;
+            border-radius: 999px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            box-shadow: 0 12px 20px rgba(41, 52, 36, 0.2);
+        }
+
+        .start-btn:hover {
+            background: #88976c;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .top-bar {
+            display: grid;
+            grid-template-columns: 40px 1fr 40px;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .speaker-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #ffb87a, #ff6b6b);
+            box-shadow: 0 6px 12px rgba(255, 107, 107, 0.35);
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .top-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #728156;
+            line-height: 1.1;
+        }
+
+        .top-subtitle {
+            font-size: 0.95em;
+            color: #88976c;
+        }
+
+        .top-action {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            border: none;
+            background: #f6fbe9;
+            box-shadow: 0 8px 16px rgba(41, 52, 36, 0.12);
+            display: grid;
+            place-items: center;
+            font-size: 1.1em;
+            color: #728156;
+            cursor: pointer;
+        }
+
+        .home-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            border: none;
+            background: #f6fbe9;
+            box-shadow: 0 8px 16px rgba(41, 52, 36, 0.12);
+            display: grid;
+            place-items: center;
+            font-size: 1.1em;
+            color: #728156;
+            cursor: pointer;
+        }
+
+        .score {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 12px 0 16px;
+        }
+
+        .score-item {
+            flex: 1;
+            background: #f6fbe9;
+            border-radius: 14px;
+            padding: 10px 8px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(41, 52, 36, 0.08);
+        }
+
+        .score-label {
+            font-size: 0.8em;
+            color: #98a77c;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .score-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #728156;
+        }
+
+        .hint {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            font-size: 0.95em;
+            color: #88976c;
+        }
+
+        .hint span {
+            background: #f6fbe9;
+            padding: 6px 12px;
+            border-radius: 999px;
+            box-shadow: 0 8px 16px rgba(41, 52, 36, 0.08);
+        }
+
+        .card-stack {
+            position: relative;
+            height: clamp(560px, 75vh, 820px);
+            margin-bottom: 22px;
+        }
+
+        .card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #f6fbe9;
+            border-radius: 26px;
+            box-shadow: none;
+            cursor: grab;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.swiping {
+            transition: none;
+        }
+
+        .card.swipe-left {
+            transform: translateX(-150%) rotate(-30deg);
+            transition: transform 0.5s ease;
+        }
+
+        .card.swipe-right {
+            transform: translateX(150%) rotate(30deg);
+            transition: transform 0.5s ease;
+        }
+
+        .card-image {
+            width: 100%;
+            height: calc(100% - 110px);
+            object-fit: contain;
+            background: #dbe7c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #728156;
+            font-size: 1.2em;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .card-info {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 12px;
+            height: 92px;
+            background: rgba(246, 251, 233, 0.95);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+            box-shadow: 0 12px 24px rgba(41, 52, 36, 0.18);
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #728156;
+        }
+
+        .card-description {
+            font-size: 1em;
+            color: #88976c;
+        }
+
+        .swipe-indicator {
+            position: absolute;
+            top: 50px;
+            font-size: 4em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .swipe-indicator.left {
+            left: 50px;
+            color: #ff6b6b;
+            transform: rotate(-30deg);
+        }
+
+        .swipe-indicator.right {
+            right: 50px;
+            color: #51cf66;
+            transform: rotate(30deg);
+        }
+
+        .swipe-indicator.show {
+            opacity: 1;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .btn {
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-size: 2.1em;
+            transition: all 0.3s ease;
+            background: #f6fbe9;
+            box-shadow: 0 12px 20px rgba(41, 52, 36, 0.15);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-left {
+            color: #88976c;
+            border: 2px solid rgba(136, 151, 108, 0.35);
+        }
+
+        .btn-right {
+            color: #728156;
+            border: 2px solid rgba(114, 129, 86, 0.35);
+        }
+
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        .result-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+        }
+
+        .result-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .result-detail {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .final-score {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .instructions {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-layer" id="homeLayer">
+        <img class="poster-image" src="Poster1.jpg" alt="AI vs Real poster">
+        <div class="home-actions">
+            <button class="start-btn" type="button" onclick="startGame()">Start</button>
+        </div>
+    </div>
+
+    <div class="game-container hidden" id="gameLayer">
+        <div class="top-bar">
+            <button class="speaker-btn" id="speakerToggle" type="button" aria-label="Toggle sound">🔊</button>
+            <div>
+                <div class="top-title">Discover</div>
+                <div class="top-subtitle">AI vs Real</div>
+            </div>
+            <button class="home-btn" id="homeButton" type="button" aria-label="Back to home">🏠</button>
+        </div>
+
+        <div class="score">
+            <div class="score-item">
+                <div class="score-label">Correct</div>
+                <div class="score-value" id="correct">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Wrong</div>
+                <div class="score-value" id="wrong">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Remaining</div>
+                <div class="score-value" id="remaining">10</div>
+            </div>
+        </div>
+
+        <div class="hint">
+            <span>Swipe left = AI</span>
+            <span>Swipe right = Real</span>
+        </div>
+
+        <div class="card-stack" id="cardStack">
+            <div class="swipe-indicator left" id="leftIndicator">AI</div>
+            <div class="swipe-indicator right" id="rightIndicator">REAL</div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-left" onclick="swipeLeft()">✕</button>
+            <button class="btn btn-right" onclick="swipeRight()">✓</button>
+        </div>
+    </div>
+
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-content">
+            <div class="result-icon" id="resultIcon"></div>
+            <div class="result-text" id="resultText"></div>
+            <div class="result-detail" id="resultDetail"></div>
+            <div class="final-score">
+                Score: <span id="finalScore"></span>
+            </div>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <audio id="backgroundAudio" src="background_sound.mp3" loop></audio>
+    <audio id="correctAudio" src="correct.mp3"></audio>
+    <audio id="wrongAudio" src="wrong.mp3"></audio>
+
+    <script>
+        // Auto-list all .png files from the local /source folder.
+        const imageFiles = [
+            "1.png",
+            "10.png",
+            "10F.png",
+            "12.png",
+            "12F.png",
+            "13.png",
+            "13F.png",
+            "14.png",
+            "14F.png",
+            "15.png",
+            "15F.png",
+            "16.png",
+            "16F.png",
+            "17.png",
+            "17F.png",
+            "18.png",
+            "18F.png",
+            "19.png",
+            "19F.png",
+            "1F.png",
+            "2.png",
+            "20.png",
+            "21.png",
+            "22.png",
+            "23.png",
+            "23F.png",
+            "24.png",
+            "25.png",
+            "26.png",
+            "27.png",
+            "28.png",
+            "2F.png",
+            "3.png",
+            "31.png",
+            "32.png",
+            "33.png",
+            "34.png",
+            "35.png",
+            "35F.png",
+            "36.png",
+            "37.png",
+            "37F.png",
+            "38.png",
+            "3F.png",
+            "4.png",
+            "4F.png",
+            "5.png",
+            "5F.png",
+            "6.png",
+            "6F.png",
+            "7.png",
+            "7F.png",
+            "8.png",
+            "8F.png",
+            "9.png",
+            "9F.png"
+        ];
+
+        const images = imageFiles.map((file) => {
+            const isAI = /F/i.test(file);
+            const label = isAI ? "AI" : "Real";
+            const base = file.replace(/\.png$/i, "");
+            return {
+                src: `source/${file}`,
+                isAI,
+                title: `${label} Image ${base}`,
+                description: isAI ? "AI generated" : "Original/real"
+            };
+        });
+
+        let currentIndex = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let isDragging = false;
+        let startX = 0;
+        let currentCard = null;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        shuffleArray(images);
+
+        function createCard(imageData, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.zIndex = images.length - index;
+            card.innerHTML = `
+                <div class="card-image">
+                    <img src="${imageData.src}" alt="${imageData.title}" onerror="this.parentElement.innerHTML='<div>Image: ${imageData.title}</div>'">
+                </div>
+                <div class="card-info">
+                    <div class="card-title">${imageData.title}</div>
+                    <div class="card-description">${imageData.description}</div>
+                </div>
+            `;
+
+            card.addEventListener('mousedown', startDrag);
+            card.addEventListener('touchstart', startDrag);
+
+            return card;
+        }
+
+        function initGame() {
+            const cardStack = document.getElementById('cardStack');
+            cardStack.innerHTML = '<div class="swipe-indicator left" id="leftIndicator">AI</div><div class="swipe-indicator right" id="rightIndicator">REAL</div>';
+            
+            images.forEach((img, index) => {
+                cardStack.appendChild(createCard(img, index));
+            });
+
+            currentCard = cardStack.querySelector('.card');
+            updateScore();
+        }
+
+        function startDrag(e) {
+            if (currentIndex >= images.length) return;
+            
+            isDragging = true;
+            currentCard.classList.add('swiping');
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', drag);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            const currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const diff = currentX - startX;
+            const rotation = diff / 20;
+
+            currentCard.style.transform = `translateX(${diff}px) rotate(${rotation}deg)`;
+
+            const leftIndicator = document.getElementById('leftIndicator');
+            const rightIndicator = document.getElementById('rightIndicator');
+
+            if (diff < -50) {
+                leftIndicator.classList.add('show');
+                rightIndicator.classList.remove('show');
+            } else if (diff > 50) {
+                rightIndicator.classList.add('show');
+                leftIndicator.classList.remove('show');
+            } else {
+                leftIndicator.classList.remove('show');
+                rightIndicator.classList.remove('show');
+            }
+        }
+
+        function endDrag(e) {
+            if (!isDragging) return;
+
+            isDragging = false;
+            const currentX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
+            const diff = currentX - startX;
+
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('mouseup', endDrag);
+            document.removeEventListener('touchend', endDrag);
+
+            if (diff < -100) {
+                handleSwipe(true); // Swipe left = AI
+            } else if (diff > 100) {
+                handleSwipe(false); // Swipe right = Real
+            } else {
+                currentCard.classList.remove('swiping');
+                currentCard.style.transform = '';
+                document.getElementById('leftIndicator').classList.remove('show');
+                document.getElementById('rightIndicator').classList.remove('show');
+            }
+        }
+
+        function swipeLeft() {
+            if (currentIndex >= images.length) return;
+            currentCard.classList.add('swipe-left');
+            handleSwipe(true);
+        }
+
+        function swipeRight() {
+            if (currentIndex >= images.length) return;
+            currentCard.classList.add('swipe-right');
+            handleSwipe(false);
+        }
+
+        function handleSwipe(swipedAsAI) {
+            const currentImage = images[currentIndex];
+            const isCorrect = swipedAsAI === currentImage.isAI;
+
+            if (isCorrect) {
+                correctCount++;
+                playResultSound(true);
+            } else {
+                wrongCount++;
+                playResultSound(false);
+            }
+
+            currentIndex++;
+            updateScore();
+
+            setTimeout(() => {
+                if (currentIndex < images.length) {
+                    const cardStack = document.getElementById('cardStack');
+                    cardStack.removeChild(currentCard);
+                    currentCard = cardStack.querySelector('.card');
+                } else {
+                    showFinalResult();
+                }
+            }, 500);
+
+            document.getElementById('leftIndicator').classList.remove('show');
+            document.getElementById('rightIndicator').classList.remove('show');
+        }
+
+        function updateScore() {
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('wrong').textContent = wrongCount;
+            document.getElementById('remaining').textContent = images.length - currentIndex;
+        }
+
+        function showFinalResult() {
+            const overlay = document.getElementById('resultOverlay');
+            const accuracy = Math.round((correctCount / images.length) * 100);
+            
+            document.getElementById('resultIcon').textContent = accuracy >= 70 ? '🎉' : accuracy >= 50 ? '👍' : '😅';
+            document.getElementById('resultText').textContent = accuracy >= 70 ? 'Excellent!' : accuracy >= 50 ? 'Good Job!' : 'Keep Practicing!';
+            document.getElementById('resultDetail').textContent = `You got ${correctCount} out of ${images.length} correct`;
+            document.getElementById('finalScore').textContent = `${accuracy}%`;
+            
+            overlay.classList.add('show');
+        }
+
+        function restartGame() {
+            currentIndex = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            shuffleArray(images);
+            document.getElementById('resultOverlay').classList.remove('show');
+            initGame();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                swipeLeft();
+            } else if (event.key === 'ArrowRight') {
+                swipeRight();
+            }
+        });
+
+        function startBackgroundAudio() {
+            const audio = document.getElementById('backgroundAudio');
+            if (!audio) return;
+
+            audio.play().catch(() => {});
+        }
+
+        function playResultSound(isCorrect) {
+            const audio = document.getElementById(isCorrect ? 'correctAudio' : 'wrongAudio');
+            if (!audio) return;
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+        }
+
+        function updateSpeakerIcon(isMuted) {
+            const button = document.getElementById('speakerToggle');
+            if (!button) return;
+            button.textContent = isMuted ? "🔇" : "🔊";
+            button.setAttribute('aria-label', isMuted ? "Sound off" : "Sound on");
+        }
+
+        function toggleBackgroundAudio() {
+            const audio = document.getElementById('backgroundAudio');
+            if (!audio) return;
+
+            if (audio.paused) {
+                audio.play().catch(() => {});
+                updateSpeakerIcon(false);
+            } else {
+                audio.pause();
+                updateSpeakerIcon(true);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('homeLayer').classList.add('hidden');
+            document.getElementById('gameLayer').classList.remove('hidden');
+            restartGame();
+            if (window.startAudioTimer) {
+                clearTimeout(window.startAudioTimer);
+            }
+            window.startAudioTimer = setTimeout(() => {
+                startBackgroundAudio();
+            }, 4000);
+            updateSpeakerIcon(false);
+        }
+
+        function goHome() {
+            document.getElementById('gameLayer').classList.add('hidden');
+            document.getElementById('homeLayer').classList.remove('hidden');
+            document.getElementById('resultOverlay').classList.remove('show');
+            const audio = document.getElementById('backgroundAudio');
+            if (audio) {
+                audio.pause();
+            }
+            updateSpeakerIcon(true);
+        }
+
+        document.getElementById('speakerToggle').addEventListener('click', toggleBackgroundAudio);
+        document.getElementById('homeButton').addEventListener('click', goHome);
+
+        initGame();
+    </script>
+</body>
+</html>
