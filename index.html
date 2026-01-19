@@ -1174,6 +1174,9 @@
             document.getElementById('homeLayer').classList.add('hidden');
             document.getElementById('gameLayer').classList.remove('hidden');
             document.body.classList.add('game-active');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
             restartGame();
             if (window.startAudioTimer) {
                 clearTimeout(window.startAudioTimer);
